@@ -3,10 +3,17 @@ package manan.mynotes;
 //import android.app.Fragment;
 
 import android.app.ProgressDialog;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -14,7 +21,10 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
+import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -37,11 +47,14 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Notes extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, AdapterView.OnItemClickListener, listentry.listener, listupdate.listener1 {
@@ -50,21 +63,21 @@ public class Notes extends AppCompatActivity
     View v;
 
 
-    String nme;
+    String nme,uID;
+    ArrayList<note> note_info;
+
 
     TextView username;
-
-    String[] NOTE;
-    String[] CONTENT;
+    note_sqlite not_sql;
+    SQLiteDatabase db;
+    String[] NTE;
+    String[] CONENT;
     int c = 0;
-    String words[];
-    int maxnotes = 3;
-    String REGISTER_URL = "chaipeeo.esy.es/add_notes.php/";
-    String REGISTER_URL1 = "chaipeeo.esy.es/change_notes.php/";
-    String REGISTER_URL2 = "chaipeeo.esy.es/delete_notes.php/";
+    int maxnotes = 50;
     View temp;
     AdapterView p;
     TextView totalnotes, notesmade;
+    BaseAdapter l;
 
 
     @Override
@@ -73,28 +86,19 @@ public class Notes extends AppCompatActivity
         setContentView(R.layout.activity_notes);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
+        note_info= new ArrayList<note>();
         Intent i = getIntent();
         Bundle bundle = i.getExtras();
-        words = bundle.getStringArray("words");
-
+        not_sql=new note_sqlite(getApplicationContext());
+        l=new adapter(this);
         shared = getSharedPreferences("user", Context.MODE_PRIVATE);
         SharedPreferences.Editor edit = shared.edit();
         nme = shared.getString("username", "");
-        NOTE = new String[5];
-        CONTENT = new String[5];
+        uID = shared.getString("uID", "");
         totalnotes = (TextView) findViewById(R.id.totalnotes);
         notesmade = (TextView) findViewById(R.id.notesmade);
 
-
-        int t = 3;
-        int j = Integer.parseInt(words[0]);
-        for (int k = 0; k < j; k++) {
-            NOTE[k] = words[t];
-            CONTENT[k] = words[t + j];
-            t++;
-            c++;
-        }
+        c=fetchnotes();
         totalnotes.setText("You can make " + maxnotes + " Notes");
         if (c == 1) {
             notesmade.setText("You made " + c + " Note");
@@ -143,10 +147,27 @@ public class Notes extends AppCompatActivity
 
         v = findViewById(R.id.content_notes);
         mylist = (ListView) v.findViewById(R.id.listview);
-        mylist.setAdapter(new adapter(this));
+        mylist.setAdapter(l);
         mylist.setOnItemClickListener(this);
 
     }
+
+    private int fetchnotes() {
+
+        SQLiteDatabase db1=not_sql.getWritableDatabase();
+        Cursor c = db1.query(true, not_sql.TB_name, null, null, null, null, null, null, null);
+        while (c.moveToNext()) {
+            String note = c.getString(c.getColumnIndex("note"));
+            String content = c.getString(c.getColumnIndex("content"));
+            note u=new note(note,content);
+           note_info.add(u);
+        }
+        c.moveToFirst();
+        int r =c.getCount();
+        c.close();
+        return r;
+    }
+
 
 
     public void note(String note, String content) {
@@ -159,16 +180,20 @@ public class Notes extends AppCompatActivity
             fragmentTransac.commit();
         }
         ;
-        NOTE[c] = note;
-        CONTENT[c] = content;
+
+        note_info.add(new note(note,content));
+        db=not_sql.getWritableDatabase();
+        ContentValues ci=new ContentValues();
+        ci.put("note",note);
+        ci.put("content",content);
+        db.insert(not_sql.TB_name,null,ci);
         c++;
         if (c == 1) {
             notesmade.setText("You made " + c + " Note");
         } else {
             notesmade.setText("You made " + c + " Notes");
         }
-        mylist.setAdapter(new adapter(Notes.this));
-        mylist.setOnItemClickListener(Notes.this);
+       l.notify();
         register(nme, note, content, c, 0);
     }
 
@@ -184,11 +209,9 @@ public class Notes extends AppCompatActivity
         }
 
         int p = Integer.parseInt(i);
-        NOTE[p] = note;
-        CONTENT[p] = content;
+        note_info.add(p,new note(note,content));
 
-        mylist.setAdapter(new adapter(Notes.this));
-        mylist.setOnItemClickListener(Notes.this);
+        l.notify();
         register(nme, note, content, p, 1);
 
     }
@@ -203,22 +226,15 @@ public class Notes extends AppCompatActivity
         }
 
         int p = Integer.parseInt(position);
-        int u = p;
-        for (; p < (c - 1); p++) {
-            NOTE[p] = NOTE[p + 1];
-            CONTENT[p] = NOTE[p + 1];
-        }
-        NOTE[p] = "";
-        CONTENT[p] = "";
+        note_info.remove(p) ;
         c--;
         if (c == 1) {
             notesmade.setText("You made " + c + " Note");
         } else {
             notesmade.setText("You made " + c + " Notes");
         }
-        mylist.setAdapter(new adapter(Notes.this));
-        mylist.setOnItemClickListener(Notes.this);
-        register(nme, note, content, u, 2);
+        l.notify();
+        register(nme, note, content, p, 2);
     }
 
     public void back(View v) {
@@ -237,6 +253,62 @@ public class Notes extends AppCompatActivity
         }
 
     }
+    private void add_Note(String username, String note, String content) {
+
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, URLs.URL_SEND_MESSAGE,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        Log.i("respo", response);
+                        msqld=msql.getWritableDatabase();
+                        ContentValues c=new ContentValues();
+                        c.put("group_id",String.valueOf(z));
+                        c.put("user_id",AppController.getInstance().getUserId());
+                        c.put("message",message);
+                        c.put("sentat",sentAt);
+                        c.put("name",name);
+                        msqld.insert(msql.TB_name,null,c);
+                        msqld.close();
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+
+                    }
+                }) {
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String, String> params = new HashMap<>();
+                params.put("Cookie", "__test=9e1a44bec2fef481f4757dd8eb7d5814; expires=Fri, 01-01-38 05:25:55 GMT; path=/");
+                return params;
+            }
+
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> params = new HashMap<>();
+                params.put("group_id",z);
+                params.put("id", String.valueOf(AppController.getInstance().getUserId()));
+                params.put("message", message);
+                params.put("name", AppController.getInstance().getUserName());
+                params.put("img_base_64", "null");
+                params.put("file_size", "null");
+                params.put("audio_uri", "null");
+                params.put("video_uri","null");
+                params.put("img_server_uri", "null");
+                return params;
+            }
+        };
+
+        //Disabling retry to prevent duplicate messages
+        int socketTimeout = 0;
+        RetryPolicy policy = new DefaultRetryPolicy(socketTimeout,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT);
+        Log.i("end0", stringRequest.toString());
+        stringRequest.setRetryPolicy(policy);
+        AppController.getInstance().addToRequestQueue(stringRequest);
+    }
 
 
     private void register(String username, String note, String content, int c, int y) {
@@ -244,11 +316,11 @@ public class Notes extends AppCompatActivity
         final String urlSuffix;
 
         if (y == 0) {
-            urlSuffix = "http://" + REGISTER_URL + "?note=" + note + "&content=" + content + "&username=" + username + "&count=" + c;
+            urlSuffix = "http://" + manan.mynotes.URL.URL_ADD_NOTES + "?note=" + note + "&content=" + content + "&username=" + username + "&count=" + c;
         } else if (y == 1) {
-            urlSuffix = "http://" + REGISTER_URL1 + "?note=" + note + "&content=" + content + "&username=" + username + "&position=" + c;
+            urlSuffix = "http://" + manan.mynotes.URL.URL_CHANGE_NOTES + "?note=" + note + "&content=" + content + "&username=" + username + "&position=" + c;
         } else {
-            urlSuffix = "http://" + REGISTER_URL2 + "?note=" + note + "&content=" + content + "&username=" + username + "&position=" + c;
+            urlSuffix = "http://" + manan.mynotes.URL.URL_DELETE_NOTES + "?note=" + note + "&content=" + content + "&username=" + username + "&position=" + c;
         }
 
         class RegisterUser extends AsyncTask<String, Void, String> {
@@ -310,8 +382,8 @@ public class Notes extends AppCompatActivity
         FragmentManager manager = getSupportFragmentManager();
         FragmentTransaction transaction = manager.beginTransaction();
         Bundle data = new Bundle();
-        data.putString("note", NOTE[position]);
-        data.putString("content", CONTENT[position]);
+        data.putString("note", note_info.get(position).note);
+        data.putString("content",note_info.get(position).content);
         data.putString("index", String.valueOf(position));
         entry.setArguments(data);
         transaction.add(R.id.noteupdate, entry, "noteupdate");
@@ -353,7 +425,7 @@ public class Notes extends AppCompatActivity
             this.context = context;
             list = new ArrayList<item>();
             for (int i = 0; i < c; i++) {
-                item temp = new item(NOTE[i], CONTENT[i]);
+                item temp = new item(note_info.get(i).note,note_info.get(i).content);
                 list.add(temp);
             }
         }
@@ -429,6 +501,10 @@ public class Notes extends AppCompatActivity
         Intent i;
 
         if (id == R.id.logout) {
+            db=not_sql.getWritableDatabase();
+            db.delete(not_sql.TB_name,null,null);
+            db.close();
+            finish();
             i = new Intent(Notes.this, login.class);
             startActivity(i);
 

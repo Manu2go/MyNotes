@@ -30,11 +30,15 @@ public class login1 {
             url = new URL(requestURL);
 
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setReadTimeout(15000);
-            conn.setConnectTimeout(15000);
+            conn.setRequestProperty("Cookie", "__test=9e1a44bec2fef481f4757dd8eb7d5814; expires=Fri, 01-01-38 05:25:55 GMT; path=/");
+            conn.setReadTimeout(150000);
+            conn.setConnectTimeout(150000);
             conn.setRequestMethod("POST");
+            conn.setRequestProperty( "Content-type", "application/x-www-form-urlencoded");
+            conn.setRequestProperty( "Accept", "*/*" );
             conn.setDoInput(true);
             conn.setDoOutput(true);
+
 
 
             OutputStream os = conn.getOutputStream();

@@ -1,16 +1,23 @@
 package manan.mynotes;
 
 import android.app.ProgressDialog;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.HashMap;
 
@@ -21,7 +28,7 @@ public class login extends AppCompatActivity implements View.OnClickListener {
 
     private Button signin;
 
-    private static final String REGISTER_URL = "http://chaipeeo.esy.es/login_notes.php";
+
 
 
     @Override
@@ -77,29 +84,39 @@ public class login extends AppCompatActivity implements View.OnClickListener {
             protected void onPostExecute(String s) {
                 super.onPostExecute(s);
 
-                //Toast.makeText(login1.this,s,Toast.LENGTH_LONG).show();
+                try {
+                    JSONObject res = new JSONObject(s);
+                    String error=res.getString("error");
+                    if(error.equals("false")){
+                        SharedPreferences user = getSharedPreferences("user", Context.MODE_PRIVATE);
+                        SharedPreferences.Editor edit = user.edit();
+                        //Toast.makeText(login.this, s, Toast.LENGTH_LONG).show();
+                        edit.putString("username", res.getString("username"));
+                        edit.putString("uID", res.getString("uID"));
+                        edit.apply();
+                        JSONArray thread = res.getJSONArray("notes");
+                        note_sqlite sql=new note_sqlite(getApplicationContext());
+                        SQLiteDatabase db=sql.getWritableDatabase();
+                        ContentValues c=new ContentValues();
+                        for (int i = 0; i < thread.length(); i++) {
+                            JSONObject obj = thread.getJSONObject(i);
+                            c.put("note",obj.getString("note"));
+                            c.put("content",obj.getString("content"));
+                            db.insert(sql.TB_name,null,c);
+                            db.close();
+                            sql.close();
+                        }
+                        Intent a = new Intent(login.this, Notes.class);
+                        startActivity(a);
 
-                if (s.equals("0")||s.equals("Error")) {
-                    Toast.makeText(login.this, "Username or Password incorrect!", Toast.LENGTH_LONG).show();
-
-                } else {
-
-                    String[] words = s.split("!@#\\$%");
-                    Intent a = new Intent(login.this, Notes.class);
-
-                    SharedPreferences user = getSharedPreferences("user", Context.MODE_PRIVATE);
-                    SharedPreferences.Editor edit = user.edit();
-                    //Toast.makeText(login.this, s, Toast.LENGTH_LONG).show();
-                   edit.putString("username", words[1]);
-                    edit.putString("password", words[2]);
-                    edit.apply();
-                    Bundle b=new Bundle();
-                    b.putStringArray("words",words);
-                    a.putExtras(b);
-
-                    //  Toast.makeText(login1.this,words[0]+" "+words[1],Toast.LENGTH_LONG).show();
-                    startActivity(a);
+                    }
+                    else if(error.equals("true")){
+                        Toast.makeText(login.this, "Login unsuccessful!", Toast.LENGTH_LONG).show();
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
+
             }
 
             @Override
@@ -110,7 +127,7 @@ public class login extends AppCompatActivity implements View.OnClickListener {
                 data.put("password", params[1]);
 
 
-                String result = ruc.sendPostRequest(REGISTER_URL, data);
+                String result = ruc.sendPostRequest(URL.URL_LOGIN, data);
                 return result;
             }
         }

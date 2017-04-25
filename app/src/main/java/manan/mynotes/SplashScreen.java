@@ -25,11 +25,11 @@ public class SplashScreen extends AppCompatActivity {
 
             }
 
-        }, 3000);
+        },1000);
 
     }
     public void change(){
-
+        finish();
         Intent i=new Intent(this, manan.mynotes.login.class);
         startActivity(i);
     }
