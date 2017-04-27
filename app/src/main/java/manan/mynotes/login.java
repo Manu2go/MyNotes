@@ -110,6 +110,7 @@ public class login extends AppCompatActivity implements View.OnClickListener {
                         }
                         db.close();
                         sql.close();
+                        finish();
                         Intent a = new Intent(login.this, Notes.class);
                         startActivity(a);
 

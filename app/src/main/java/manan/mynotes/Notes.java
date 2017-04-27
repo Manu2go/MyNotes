@@ -22,6 +22,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.internal.app.ToolbarActionBar;
 import android.support.v7.widget.RecyclerView;
 import android.util.Base64;
 import android.util.Log;
@@ -88,6 +89,7 @@ public class Notes extends AppCompatActivity
     int maxnotes = 50;
     View temp;
     AdapterView p;
+    Toolbar second_toolbar;
     TextView totalnotes, notesmade;
 
 
@@ -106,6 +108,7 @@ public class Notes extends AppCompatActivity
         nme = shared.getString("username", "");
         String ID = shared.getString("uID", "");
         uID=Integer.parseInt(ID);
+        second_toolbar=(Toolbar)findViewById(R.id.second_toolbar);
         totalnotes = (TextView) findViewById(R.id.totalnotes);
         notesmade = (TextView) findViewById(R.id.notesmade);
 
@@ -140,7 +143,7 @@ public class Notes extends AppCompatActivity
                     listentry entry = new listentry();
                     FragmentManager manager = getSupportFragmentManager();
                     FragmentTransaction transaction = manager.beginTransaction();
-
+                    second_toolbar.setVisibility(View.GONE);
                     transaction.add(R.id.noteupdate, entry, "note");
                     transaction.commit();
                 } else {
@@ -192,6 +195,7 @@ public class Notes extends AppCompatActivity
             fragmentTransac.commit();
         }
         fab.setEnabled(true);
+        second_toolbar.setVisibility(View.VISIBLE);
         add_note(note, content);
     }
 
@@ -206,6 +210,8 @@ public class Notes extends AppCompatActivity
             fragmentTransac.commit();
         }
         fab.setEnabled(true);
+        second_toolbar.setVisibility(View.VISIBLE);
+        add_note(note, content);
         int p = Integer.parseInt(i);
         update_note(note, content,note_info.get(p).id,p );
 
@@ -220,6 +226,8 @@ public class Notes extends AppCompatActivity
             fragmentTransac.commit();
         }
         fab.setEnabled(true);
+        second_toolbar.setVisibility(View.VISIBLE);
+        add_note(note, content);
         int p = Integer.parseInt(position);
         delete_note(note_info.get(p).id,p);
     }
@@ -228,6 +236,7 @@ public class Notes extends AppCompatActivity
         FragmentManager manager = getSupportFragmentManager();
         FragmentTransaction fragmentTransac = manager.beginTransaction();
         Fragment f = manager.findFragmentByTag("note");
+        second_toolbar.setVisibility(View.VISIBLE);
         fab.setEnabled(true);
         if (f != null) {
             fragmentTransac.remove(f);
@@ -366,7 +375,7 @@ public class Notes extends AppCompatActivity
                 try {
                     URL url = new URL(urlSuffix);
                     HttpURLConnection con = (HttpURLConnection) url.openConnection();
-                    con.setRequestProperty("Cookie", "__test=9e1a44bec2fef481f4757dd8eb7d5814; expires=Fri, 01-01-38 05:25:55 GMT; path=/");
+                    con.setRequestProperty("Cookie", "__test=9fab03b5dbd43c100a8b83a7a2bbc88c; expires=Fri, 01-01-38 05:25:55 GMT; path=/");
                     bufferedReader = new BufferedReader(new InputStreamReader(con.getInputStream()));
 
                     String result;
@@ -434,7 +443,7 @@ public class Notes extends AppCompatActivity
                 try {
                     URL url = new URL(urlSuffix);
                     HttpURLConnection con = (HttpURLConnection) url.openConnection();
-                    con.setRequestProperty("Cookie", "__test=9e1a44bec2fef481f4757dd8eb7d5814; expires=Fri, 01-01-38 05:25:55 GMT; path=/");
+                    con.setRequestProperty("Cookie", "__test=9fab03b5dbd43c100a8b83a7a2bbc88c; expires=Fri, 01-01-38 05:25:55 GMT; path=/");
                     bufferedReader = new BufferedReader(new InputStreamReader(con.getInputStream()));
 
                     String result;
@@ -503,7 +512,7 @@ public class Notes extends AppCompatActivity
                 try {
                     URL url = new URL(urlSuffix);
                     HttpURLConnection con = (HttpURLConnection) url.openConnection();
-                    con.setRequestProperty("Cookie", "__test=9e1a44bec2fef481f4757dd8eb7d5814; expires=Fri, 01-01-38 05:25:55 GMT; path=/");
+                    con.setRequestProperty("Cookie", "__test=9fab03b5dbd43c100a8b83a7a2bbc88c; expires=Fri, 01-01-38 05:25:55 GMT; path=/");
                     bufferedReader = new BufferedReader(new InputStreamReader(con.getInputStream()));
 
                     String result;
@@ -529,6 +538,7 @@ public class Notes extends AppCompatActivity
         p = parent;
         temp = view;
         fab.setEnabled(false);
+        second_toolbar.setVisibility(View.GONE);
         listupdate entry = new listupdate();
         FragmentManager manager = getSupportFragmentManager();
         FragmentTransaction transaction = manager.beginTransaction();
@@ -617,9 +627,7 @@ public class Notes extends AppCompatActivity
     }
 
 
-    @Override
-    public void onBackPressed() {
-    }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -666,6 +674,8 @@ public class Notes extends AppCompatActivity
             FragmentManager manager = getSupportFragmentManager();
             FragmentTransaction fragmentTransac = manager.beginTransaction();
             Fragment f = manager.findFragmentByTag("note");
+            fab.setEnabled(true);
+            second_toolbar.setVisibility(View.VISIBLE);
             if (f != null) {
                 fragmentTransac.remove(f);
                 fragmentTransac.commit();

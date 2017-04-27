@@ -35,7 +35,8 @@
             <android.support.v7.widget.Toolbar
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="#2b7be4">
+                android:background="#2b7be4"
+                android:id="@+id/second_toolbar">
 
                 <RelativeLayout
                     android:layout_width="match_parent"

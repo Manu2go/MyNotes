@@ -21,20 +21,21 @@ public class SplashScreen extends AppCompatActivity {
             Intent i=new Intent(this, Notes.class);
             startActivity(i);
         }
-        splashImageView = new ImageView(this);
-        splashImageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        splashImageView.setImageResource(R.drawable.welcome);
-        setContentView(splashImageView);
+        else {
+            splashImageView = new ImageView(this);
+            splashImageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            splashImageView.setImageResource(R.drawable.welcome);
+            setContentView(splashImageView);
 
-        Handler h = new Handler();
-        h.postDelayed(new Runnable() {
-            public void run() {
-                change();
+            Handler h = new Handler();
+            h.postDelayed(new Runnable() {
+                public void run() {
+                    change();
 
-            }
+                }
 
-        },1000);
-
+            }, 1000);
+        }
     }
     public void change(){
         finish();

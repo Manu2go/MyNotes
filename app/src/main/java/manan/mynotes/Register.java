@@ -61,7 +61,7 @@ public class Register extends AppCompatActivity implements View.OnClickListener{
     }
 
     private void register( String username, String password ) {
-        final String urlSuffix ="http://"+ URLs.URL_REGISTER+"?username="+username+"&password="+password;
+        final String urlSuffix =URLs.URL_REGISTER+"?username="+username+"&password="+password;
 
         class RegisterUser extends AsyncTask<String, Void, String>{
 
@@ -97,7 +97,7 @@ public class Register extends AppCompatActivity implements View.OnClickListener{
                 try {
                     URL url = new URL(urlSuffix);
                     HttpURLConnection con = (HttpURLConnection) url.openConnection();
-                    con.setRequestProperty("Cookie", "__test=9e1a44bec2fef481f4757dd8eb7d5814; expires=Fri, 01-01-38 05:25:55 GMT; path=/");
+                    con.setRequestProperty("Cookie", "__test=9fab03b5dbd43c100a8b83a7a2bbc88c; expires=Fri, 01-01-38 05:25:55 GMT; path=/");
 
                     bufferedReader = new BufferedReader(new InputStreamReader(con.getInputStream()));
 
