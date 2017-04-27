@@ -21,11 +21,18 @@ Some details of my app:-
      therefore all the usernames, passwords and  all the notes made by a user
      are stored on an SQL database stored on server .
 
-NOTE:-  Since the notes are to be stored on a  server , therefore right now I have limited the maximum number  of notes ,a user can make ,  to 3, but the limit can be extended to a large number by just increasing the number of columns on the sql database stored on server
 
- 4.  server details:-
+4.  other technologies used: php
 
-    hosting site   :- www.hostinger.in
-    server name :- chaipeeo.esy.es
-
-5.  other technologies used: php
+# Screenshots
+<div>
+<img src="/Screenshots/3.png" alt="Drawing"  height="300" width="180" hspace="20">
+<img src="/Screenshots/1.png" alt="Drawing"  height="300" width="180" hspace="20">
+<img src="/Screenshots/2.png" alt="Drawing"  height="300" width="180" hspace="20">
+<br/><br/>
+<img src="/Screenshots/11.png" alt="Drawing"  height="300" width="180" hspace="20">
+<img src="/Screenshots/10.png" alt="Drawing"  height="300" width="180" hspace="20">
+<img src="/Screenshots/20.png" alt="Drawing"  height="300" width="180" hspace="20">
+<br/><br/>
+<img src="/Screenshots/21.png" alt="Drawing"  height="300" width="180" hspace="20">
+</div>
