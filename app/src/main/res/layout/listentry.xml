@@ -7,6 +7,10 @@
 
     tools:context="manan.mynotes.listentry">
 
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#ffffff">
 
     <RelativeLayout
 
@@ -17,7 +21,7 @@
         android:paddingRight="@dimen/activity_horizontal_margin"
         android:paddingTop="@dimen/activity_vertical_margin"
         android:layout_alignParentBottom="true"
-        android:background="#45f89f">
+        android:background="#ffffff">
 
         <TextView
             android:layout_width="wrap_content"
@@ -25,9 +29,8 @@
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:text="Heading:"
             android:id="@+id/head"
-            android:textStyle="bold"
-            android:textSize="25sp"
-            android:paddingBottom="12dp"
+            android:textSize="22sp"
+            android:paddingBottom="5dp"
             android:layout_alignParentTop="true"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
@@ -35,14 +38,12 @@
 
         <EditText
             android:layout_width="match_parent"
-            android:layout_height="50dp"
+            android:layout_height="wrap_content"
             android:id="@+id/heading"
             android:layout_below="@+id/head"
-            android:layout_centerHorizontal="true"
 
             android:hint=" Enter The Heading:"
-            android:textSize="22sp"
-            android:background="@drawable/border"
+            android:background="#c3e9e9"
              />
 
         <TextView
@@ -51,22 +52,20 @@
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:text="Content:"
             android:id="@+id/cont"
-            android:textStyle="bold"
-            android:textSize="25sp"
-            android:paddingBottom="12dp"
-            android:paddingTop="12dp"
+            android:textSize="22sp"
+            android:paddingBottom="5dp"
+            android:paddingTop="5dp"
             android:layout_alignParentStart="true"
             android:layout_alignParentLeft="true"
             android:layout_below="@+id/heading" />
 
         <EditText
             android:layout_width="fill_parent"
-            android:layout_height="200dp"
+            android:layout_height="wrap_content"
             android:id="@+id/content"
-            android:textSize="22sp"
             android:layout_below="@+id/cont"
             android:layout_alignParentLeft="true"
-            android:background="@drawable/border"
+            android:background="#c3e9e9"
             android:autoText="false"
             android:hint=" Enter The Content:"
             android:gravity="top"
@@ -98,6 +97,6 @@
 
 
     </RelativeLayout>
-
+    </ScrollView>
 
 </RelativeLayout>

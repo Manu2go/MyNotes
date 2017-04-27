@@ -46,7 +46,17 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+import com.android.volley.AuthFailureError;
+import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.RetryPolicy;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -55,6 +65,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import manan.mynotes.URLs;
 
 public class Notes extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, AdapterView.OnItemClickListener, listentry.listener, listupdate.listener1 {
@@ -63,10 +74,11 @@ public class Notes extends AppCompatActivity
     View v;
 
 
-    String nme,uID;
+    String nme;
+    int uID;
     ArrayList<note> note_info;
 
-
+    FloatingActionButton fab;
     TextView username;
     note_sqlite not_sql;
     SQLiteDatabase db;
@@ -77,7 +89,6 @@ public class Notes extends AppCompatActivity
     View temp;
     AdapterView p;
     TextView totalnotes, notesmade;
-    BaseAdapter l;
 
 
     @Override
@@ -90,11 +101,11 @@ public class Notes extends AppCompatActivity
         Intent i = getIntent();
         Bundle bundle = i.getExtras();
         not_sql=new note_sqlite(getApplicationContext());
-        l=new adapter(this);
         shared = getSharedPreferences("user", Context.MODE_PRIVATE);
         SharedPreferences.Editor edit = shared.edit();
         nme = shared.getString("username", "");
-        uID = shared.getString("uID", "");
+        String ID = shared.getString("uID", "");
+        uID=Integer.parseInt(ID);
         totalnotes = (TextView) findViewById(R.id.totalnotes);
         notesmade = (TextView) findViewById(R.id.notesmade);
 
@@ -120,7 +131,7 @@ public class Notes extends AppCompatActivity
         navigationView.setItemIconTintList(null);
 
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -147,7 +158,7 @@ public class Notes extends AppCompatActivity
 
         v = findViewById(R.id.content_notes);
         mylist = (ListView) v.findViewById(R.id.listview);
-        mylist.setAdapter(l);
+        mylist.setAdapter(new adapter(this));
         mylist.setOnItemClickListener(this);
 
     }
@@ -159,7 +170,8 @@ public class Notes extends AppCompatActivity
         while (c.moveToNext()) {
             String note = c.getString(c.getColumnIndex("note"));
             String content = c.getString(c.getColumnIndex("content"));
-            note u=new note(note,content);
+            int id = c.getInt(c.getColumnIndex("id"));
+            note u=new note(note,content,id);
            note_info.add(u);
         }
         c.moveToFirst();
@@ -179,22 +191,8 @@ public class Notes extends AppCompatActivity
             fragmentTransac.remove(f);
             fragmentTransac.commit();
         }
-        ;
-
-        note_info.add(new note(note,content));
-        db=not_sql.getWritableDatabase();
-        ContentValues ci=new ContentValues();
-        ci.put("note",note);
-        ci.put("content",content);
-        db.insert(not_sql.TB_name,null,ci);
-        c++;
-        if (c == 1) {
-            notesmade.setText("You made " + c + " Note");
-        } else {
-            notesmade.setText("You made " + c + " Notes");
-        }
-       l.notify();
-        register(nme, note, content, c, 0);
+        fab.setEnabled(true);
+        add_note(note, content);
     }
 
     public void update(String note, String content, String i) {
@@ -207,12 +205,9 @@ public class Notes extends AppCompatActivity
             fragmentTransac.remove(f);
             fragmentTransac.commit();
         }
-
+        fab.setEnabled(true);
         int p = Integer.parseInt(i);
-        note_info.add(p,new note(note,content));
-
-        l.notify();
-        register(nme, note, content, p, 1);
+        update_note(note, content,note_info.get(p).id,p );
 
     }
 
@@ -224,23 +219,16 @@ public class Notes extends AppCompatActivity
             fragmentTransac.remove(f);
             fragmentTransac.commit();
         }
-
+        fab.setEnabled(true);
         int p = Integer.parseInt(position);
-        note_info.remove(p) ;
-        c--;
-        if (c == 1) {
-            notesmade.setText("You made " + c + " Note");
-        } else {
-            notesmade.setText("You made " + c + " Notes");
-        }
-        l.notify();
-        register(nme, note, content, p, 2);
+        delete_note(note_info.get(p).id,p);
     }
 
     public void back(View v) {
         FragmentManager manager = getSupportFragmentManager();
         FragmentTransaction fragmentTransac = manager.beginTransaction();
         Fragment f = manager.findFragmentByTag("note");
+        fab.setEnabled(true);
         if (f != null) {
             fragmentTransac.remove(f);
             fragmentTransac.commit();
@@ -253,65 +241,10 @@ public class Notes extends AppCompatActivity
         }
 
     }
-    private void add_Note(String username, String note, String content) {
-
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, URLs.URL_SEND_MESSAGE,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        Log.i("respo", response);
-                        msqld=msql.getWritableDatabase();
-                        ContentValues c=new ContentValues();
-                        c.put("group_id",String.valueOf(z));
-                        c.put("user_id",AppController.getInstance().getUserId());
-                        c.put("message",message);
-                        c.put("sentat",sentAt);
-                        c.put("name",name);
-                        msqld.insert(msql.TB_name,null,c);
-                        msqld.close();
-                    }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-
-                    }
-                }) {
-            @Override
-            public Map<String, String> getHeaders() throws AuthFailureError {
-                Map<String, String> params = new HashMap<>();
-                params.put("Cookie", "__test=9e1a44bec2fef481f4757dd8eb7d5814; expires=Fri, 01-01-38 05:25:55 GMT; path=/");
-                return params;
-            }
-
-            @Override
-            protected Map<String, String> getParams() throws AuthFailureError {
-                Map<String, String> params = new HashMap<>();
-                params.put("group_id",z);
-                params.put("id", String.valueOf(AppController.getInstance().getUserId()));
-                params.put("message", message);
-                params.put("name", AppController.getInstance().getUserName());
-                params.put("img_base_64", "null");
-                params.put("file_size", "null");
-                params.put("audio_uri", "null");
-                params.put("video_uri","null");
-                params.put("img_server_uri", "null");
-                return params;
-            }
-        };
-
-        //Disabling retry to prevent duplicate messages
-        int socketTimeout = 0;
-        RetryPolicy policy = new DefaultRetryPolicy(socketTimeout,
-                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
-                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT);
-        Log.i("end0", stringRequest.toString());
-        stringRequest.setRetryPolicy(policy);
-        AppController.getInstance().addToRequestQueue(stringRequest);
-    }
 
 
-    private void register(String username, String note, String content, int c, int y) {
+
+   /* private void register(String username, String note, String content, int c, int y) {
 
         final String urlSuffix;
 
@@ -371,13 +304,231 @@ public class Notes extends AppCompatActivity
 
         RegisterUser ru = new RegisterUser();
         ru.execute(urlSuffix);
+    }*/
+    private void add_note(final String note,final String content) {
+
+        final String urlSuffix;
+
+
+        urlSuffix = URLs.URL_ADD_NOTES + "?note=" + note + "&content=" + content + "&uID=" + uID;
+
+
+        class RegisterUser extends AsyncTask<String, Void, String> {
+
+            ProgressDialog loading;
+
+
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                loading = ProgressDialog.show(Notes.this, "Please Wait", null, true, true);
+            }
+
+            @Override
+            protected void onPostExecute(String s) {
+                super.onPostExecute(s);
+                loading.dismiss();
+                Log.i("r",s);
+                try {
+                    JSONObject res = new JSONObject(s);
+                    String error=res.getString("error");
+                    if(error.equals("false")){
+                        Toast.makeText(getApplicationContext(), "Operation Successful", Toast.LENGTH_LONG).show();
+                        int id=res.getInt("id");
+                        note_info.add(new note(note,content,id));
+                        db=not_sql.getWritableDatabase();
+                        ContentValues ci=new ContentValues();
+                        ci.put("note",note);
+                        ci.put("content",content);
+                        ci.put("id",id);
+                        db.insert(not_sql.TB_name,null,ci);
+                        c++;
+                        if (c == 1) {
+                            notesmade.setText("You made " + c + " Note");
+                        } else {
+                            notesmade.setText("You made " + c + " Notes");
+                        }
+                        mylist.setAdapter(new adapter(Notes.this));
+                    }
+                    else if(error.equals("true")){
+                        Toast.makeText(Notes.this, s, Toast.LENGTH_LONG).show();
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    Toast.makeText(Notes.this, "Operation Unsuccessful!!", Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            protected String doInBackground(String... params) {
+                String s = params[0];
+                BufferedReader bufferedReader = null;
+                try {
+                    URL url = new URL(urlSuffix);
+                    HttpURLConnection con = (HttpURLConnection) url.openConnection();
+                    con.setRequestProperty("Cookie", "__test=9e1a44bec2fef481f4757dd8eb7d5814; expires=Fri, 01-01-38 05:25:55 GMT; path=/");
+                    bufferedReader = new BufferedReader(new InputStreamReader(con.getInputStream()));
+
+                    String result;
+
+                    result = bufferedReader.readLine();
+
+                    return result;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return "Operation Unsuccessful";
+                }
+            }
+        }
+
+        RegisterUser ru = new RegisterUser();
+        ru.execute(urlSuffix);
     }
+
+    private void update_note(final String note,final String content,final int ID,final int position) {
+
+        final String urlSuffix;
+
+
+        urlSuffix = URLs.URL_CHANGE_NOTES +"?note=" + note + "&content=" + content + "&id=" +ID;;
+
+
+        class RegisterUser extends AsyncTask<String, Void, String> {
+
+            ProgressDialog loading;
+
+
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                loading = ProgressDialog.show(Notes.this, "Please Wait", null, true, true);
+            }
+
+            @Override
+            protected void onPostExecute(String s) {
+                super.onPostExecute(s);
+                loading.dismiss();
+                Log.i("u",s);
+                try {
+                    JSONObject res = new JSONObject(s);
+                    String error=res.getString("error");
+                    if(error.equals("false")){
+                        Toast.makeText(getApplicationContext(), "Operation Successful", Toast.LENGTH_LONG).show();
+                        Log.i("up",position+"");
+                        note_info.set(position,new note(note,content,ID));
+                        mylist.setAdapter(new adapter(Notes.this));
+                    }
+                    else if(error.equals("true")){
+                        Toast.makeText(Notes.this, s, Toast.LENGTH_LONG).show();
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    Toast.makeText(Notes.this, "Operation Unsuccessful!!", Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            protected String doInBackground(String... params) {
+                String s = params[0];
+                BufferedReader bufferedReader = null;
+                try {
+                    URL url = new URL(urlSuffix);
+                    HttpURLConnection con = (HttpURLConnection) url.openConnection();
+                    con.setRequestProperty("Cookie", "__test=9e1a44bec2fef481f4757dd8eb7d5814; expires=Fri, 01-01-38 05:25:55 GMT; path=/");
+                    bufferedReader = new BufferedReader(new InputStreamReader(con.getInputStream()));
+
+                    String result;
+
+                    result = bufferedReader.readLine();
+
+                    return result;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return "Operation Unsuccessful";
+                }
+            }
+        }
+
+        RegisterUser ru = new RegisterUser();
+        ru.execute(urlSuffix);
+    }
+
+    private void delete_note(final int ID,final int position) {
+
+        final String urlSuffix;
+
+
+        urlSuffix = URLs.URL_DELETE_NOTES + "?id=" + ID;
+
+
+        class RegisterUser extends AsyncTask<String, Void, String> {
+
+            ProgressDialog loading;
+
+
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                loading = ProgressDialog.show(Notes.this, "Please Wait", null, true, true);
+            }
+
+            @Override
+            protected void onPostExecute(String s) {
+                super.onPostExecute(s);
+                loading.dismiss();
+                Log.i("t",s);
+                try {
+                    JSONObject res = new JSONObject(s);
+                    String error=res.getString("error");
+                    if(error.equals("false")){
+                        Toast.makeText(getApplicationContext(), "Operation Successful", Toast.LENGTH_LONG).show();
+                        Log.i("dp",position+"");
+                        note_info.remove(position);
+                        c--;
+                        mylist.setAdapter(new adapter(Notes.this));
+                    }
+                    else if(error.equals("true")) {
+                        Toast.makeText(Notes.this, s, Toast.LENGTH_LONG).show();
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    Toast.makeText(Notes.this, "Operation Unsuccessful!!", Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            protected String doInBackground(String... params) {
+                String s = params[0];
+                BufferedReader bufferedReader = null;
+                try {
+                    URL url = new URL(urlSuffix);
+                    HttpURLConnection con = (HttpURLConnection) url.openConnection();
+                    con.setRequestProperty("Cookie", "__test=9e1a44bec2fef481f4757dd8eb7d5814; expires=Fri, 01-01-38 05:25:55 GMT; path=/");
+                    bufferedReader = new BufferedReader(new InputStreamReader(con.getInputStream()));
+
+                    String result;
+
+                    result = bufferedReader.readLine();
+
+                    return result;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return "Operation Unsuccessful";
+                }
+            }
+        }
+
+        RegisterUser ru = new RegisterUser();
+        ru.execute(urlSuffix);
+    }
+
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
         p = parent;
         temp = view;
+        fab.setEnabled(false);
         listupdate entry = new listupdate();
         FragmentManager manager = getSupportFragmentManager();
         FragmentTransaction transaction = manager.beginTransaction();
@@ -400,8 +551,6 @@ public class Notes extends AppCompatActivity
 
             this.note = note;
             this.content = content;
-
-
         }
     }
 
@@ -424,7 +573,7 @@ public class Notes extends AppCompatActivity
         adapter(Context context) {
             this.context = context;
             list = new ArrayList<item>();
-            for (int i = 0; i < c; i++) {
+            for (int i = 0; i < note_info.size(); i++) {
                 item temp = new item(note_info.get(i).note,note_info.get(i).content);
                 list.add(temp);
             }
@@ -505,6 +654,10 @@ public class Notes extends AppCompatActivity
             db.delete(not_sql.TB_name,null,null);
             db.close();
             finish();
+            SharedPreferences user = getSharedPreferences("user", Context.MODE_PRIVATE);
+            SharedPreferences.Editor edit=user.edit();
+            edit.putString("login_status","0");
+            edit.apply();
             i = new Intent(Notes.this, login.class);
             startActivity(i);
 

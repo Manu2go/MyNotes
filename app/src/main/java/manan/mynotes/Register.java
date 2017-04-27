@@ -61,7 +61,7 @@ public class Register extends AppCompatActivity implements View.OnClickListener{
     }
 
     private void register( String username, String password ) {
-        final String urlSuffix ="http://"+ manan.mynotes.URL.URL_REGISTER+"?username="+username+"&password="+password;
+        final String urlSuffix ="http://"+ URLs.URL_REGISTER+"?username="+username+"&password="+password;
 
         class RegisterUser extends AsyncTask<String, Void, String>{
 
@@ -78,14 +78,14 @@ public class Register extends AppCompatActivity implements View.OnClickListener{
             protected void onPostExecute(String s) {
                 super.onPostExecute(s);
                 loading.dismiss();
-                if(s.equals("please fill all values")||s.equals("username already exist")||s.equals("oops! Please try again!"))
+                if(s.equals("successfully registered"))
                 {
                     Toast.makeText(getApplicationContext(),s,Toast.LENGTH_LONG).show();
+                    finish();
                 }
                 else
                 {
-                    Toast.makeText(getApplicationContext(),"Succesfully Registered",Toast.LENGTH_LONG).show();
-                    finish();
+                    Toast.makeText(getApplicationContext(),s,Toast.LENGTH_LONG).show();
                 }
 
             }
@@ -107,7 +107,7 @@ public class Register extends AppCompatActivity implements View.OnClickListener{
 
                     return result;
                 }catch(Exception e){
-                    return null;
+                    return "Operation unsuccessful!!";
                 }
             }
         }

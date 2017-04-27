@@ -14,7 +14,7 @@ public class note_sqlite extends SQLiteOpenHelper {
     public static String TB_name="Notes";
     public static int version=1;
     public static Context context;
-    public static String create_query="CREATE TABLE "+TB_name+" (Id int primary key ,note varchar(5000),content varchar(5000));";
+    public static String create_query="CREATE TABLE "+TB_name+" (id int ,note varchar(5000),content varchar(5000));";
     public static String drop="Drop table if exists "+TB_name;
     public note_sqlite(Context c){
         super(c,DB_name,null,version);

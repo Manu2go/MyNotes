@@ -77,15 +77,17 @@ public class login extends AppCompatActivity implements View.OnClickListener {
 
             protected void onPreExecute() {
                 super.onPreExecute();
-
+                loading = ProgressDialog.show(login.this, "Please Wait",null, true, true);
             }
 
             @Override
             protected void onPostExecute(String s) {
                 super.onPostExecute(s);
-
+                Log.i("e",s);
+                loading.dismiss();
                 try {
                     JSONObject res = new JSONObject(s);
+
                     String error=res.getString("error");
                     if(error.equals("false")){
                         SharedPreferences user = getSharedPreferences("user", Context.MODE_PRIVATE);
@@ -93,6 +95,7 @@ public class login extends AppCompatActivity implements View.OnClickListener {
                         //Toast.makeText(login.this, s, Toast.LENGTH_LONG).show();
                         edit.putString("username", res.getString("username"));
                         edit.putString("uID", res.getString("uID"));
+                        edit.putString("status", "1");
                         edit.apply();
                         JSONArray thread = res.getJSONArray("notes");
                         note_sqlite sql=new note_sqlite(getApplicationContext());
@@ -100,12 +103,13 @@ public class login extends AppCompatActivity implements View.OnClickListener {
                         ContentValues c=new ContentValues();
                         for (int i = 0; i < thread.length(); i++) {
                             JSONObject obj = thread.getJSONObject(i);
+                            c.put("id",obj.getInt("id"));
                             c.put("note",obj.getString("note"));
                             c.put("content",obj.getString("content"));
                             db.insert(sql.TB_name,null,c);
-                            db.close();
-                            sql.close();
                         }
+                        db.close();
+                        sql.close();
                         Intent a = new Intent(login.this, Notes.class);
                         startActivity(a);
 
@@ -114,6 +118,7 @@ public class login extends AppCompatActivity implements View.OnClickListener {
                         Toast.makeText(login.this, "Login unsuccessful!", Toast.LENGTH_LONG).show();
                     }
                 } catch (JSONException e) {
+                    Toast.makeText(login.this, "Login unsuccessful!", Toast.LENGTH_LONG).show();
                     e.printStackTrace();
                 }
 
@@ -127,7 +132,7 @@ public class login extends AppCompatActivity implements View.OnClickListener {
                 data.put("password", params[1]);
 
 
-                String result = ruc.sendPostRequest(URL.URL_LOGIN, data);
+                String result = ruc.sendPostRequest(URLs.URL_LOGIN, data);
                 return result;
             }
         }

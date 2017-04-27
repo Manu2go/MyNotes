@@ -31,11 +31,9 @@ public class login1 {
 
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestProperty("Cookie", "__test=9e1a44bec2fef481f4757dd8eb7d5814; expires=Fri, 01-01-38 05:25:55 GMT; path=/");
-            conn.setReadTimeout(150000);
-            conn.setConnectTimeout(150000);
+            conn.setReadTimeout(10000);
+            conn.setConnectTimeout(10000);
             conn.setRequestMethod("POST");
-            conn.setRequestProperty( "Content-type", "application/x-www-form-urlencoded");
-            conn.setRequestProperty( "Accept", "*/*" );
             conn.setDoInput(true);
             conn.setDoOutput(true);
 

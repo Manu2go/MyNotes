@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.Editable;
+import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,7 +32,12 @@ public class listentry extends Fragment {
         note=(EditText)v.findViewById(R.id.heading);
         content=(EditText)v.findViewById(R.id.content);
         submit=(Button)v.findViewById(R.id.submit);
-
+        Display display = getActivity().getWindowManager().getDefaultDisplay();
+        int width = display.getWidth();
+        double  width1 = width/2;
+        double width2=width/6;
+        content.setHeight((int)width1);
+        note.setHeight((int)width2);
 
 
             submit.setOnClickListener(
